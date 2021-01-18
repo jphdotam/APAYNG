@@ -1,4 +1,4 @@
-description: hrnet, adamw, customeonecycle, mIoU metric
+description: unext, adamw, customeonecycle, mIoU metric
 
 resume:
   path: false
@@ -15,7 +15,7 @@ data:
   n_folds: 5
 
 training:
-  model: hrnet
+  model: unext
   device: cuda
   data_parallel: true
   batch_size_train: 24

@@ -1,15 +1,21 @@
-from collections import defaultdict
-
 import torch
 import torch.nn as nn
 
 from lib.data import LABELS
 from lib.hrnet import get_config, get_seg_model
+from lib.unext import UneXt50
 
 
 def load_model(cfg):
-    hrnet_cfg = get_config(len(LABELS))
-    model = get_seg_model(hrnet_cfg)
+    model_type = cfg['training']['model']
+    if model_type == 'hrnet':
+        hrnet_cfg = get_config(len(LABELS))
+        model = get_seg_model(hrnet_cfg)
+    elif model_type == 'unext':
+        model = UneXt50(n_inputs=1, n_outputs=len(LABELS))
+    else:
+        raise ValueError(f"Unknown model type: {model_type}")
+
     device = cfg['training']['device']
 
     if modelpath := cfg['resume'].get('path', None):
