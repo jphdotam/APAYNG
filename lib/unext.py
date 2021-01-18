@@ -37,7 +37,7 @@ class UneXt50(nn.Module):
         self.dec1 = UnetBlock(64, 64, 32)
         self.fpn = FPN([512, 256, 128, 64], [16] * 4)
         self.drop = nn.Dropout2d(0.1)
-        self.final_conv = ConvLayer(32 + 16 * 4, n_inputs, ks=1, norm_type=None, act_cls=None)
+        self.final_conv = ConvLayer(32 + 16 * 4, n_outputs, ks=1, norm_type=None, act_cls=None)
 
         self.param_groups = [self.enc0, self.enc1, self.enc3, self.enc4,
                              self.aspp,
