@@ -1,0 +1,49 @@
+description: adamw, customeonecycle, mIoU metric
+
+resume:
+  path: false
+  epoch: false
+  reset_optimizer: false
+  reset_lr: false
+
+paths:
+  dicoms: G:\APAYN\dicoms
+  models: G:\APAYN\models
+  case_data: G:\APAYN\sz.csv
+
+data:
+  n_folds: 5
+
+training:
+  model: hrnet
+  device: cuda
+  data_parallel: true
+  batch_size_train: 24
+  batch_size_test: 24
+  n_workers: 8
+  n_epochs: 200
+  train_criterion: crossentropy
+  test_criterion: crossentropy
+  optimizer:
+    type: adamw
+    lr: 5.0e-4
+    weight_decay: 5.0e-4  # 5.0e-4 reasonable for adamw
+  scheduler:
+    type: customonecycle
+    customonecycle: # custom one cycle (linear warm up)
+      max_lr: 1.0e-3
+      final_lr: 1.0e-10
+      pct_start: 0.3
+
+transforms:
+  train:
+    randomresizedcrop: [480, 480]
+    rotate: 20
+    grid_dropout: [0.5, True]  # Chance, apply to mask
+  test:
+    centrecrop: [560, 560]
+
+output:
+  log_freq: 10
+  save: best
+  n_vis: 8

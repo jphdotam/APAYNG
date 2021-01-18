@@ -1,0 +1,11 @@
+pyyaml
+numpy
+pillow
+opencv
+scikit-image
+pytorch
+torchvision
+pydicom
+matplotlib
+albumentations
+wandb
