@@ -8,7 +8,7 @@ import torch
 import torch.nn.functional as F
 
 from lib.data import LABELS
-from lib.losses import jaccard_loss, DiceCEHybridLoss, lovasz_softmax
+from lib.losses import jaccard_loss, DiceCEHybridLoss, LovaszSoftmax
 from lib.hrnet import upsample_pred_if_needed
 from lib.metrics import mIOU
 
@@ -42,6 +42,7 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
     meter_ce_loss, meter_jaccard_loss, meter_iou_score, meter_hybrid_dice_ce, meter_lovasz = Am(), Am(), Am(), Am(), Am()
 
     dice_ce_hybrid_loss_fn = DiceCEHybridLoss(num_classes=len(LABELS), bce_weight=0.5)
+    lovasz_loss_fn = LovaszSoftmax()
 
     log_freq = cfg['output']['log_freq']
     device = cfg['training']['device']
@@ -75,7 +76,7 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
             with nullcontext() if criterion == "dice_ce_hybrid" else torch.no_grad():
                 dice_ce_hybrid_loss = dice_ce_hybrid_loss_fn(y_pred, y_true)
             with nullcontext() if criterion == "lovasz" else torch.no_grad():
-                lovasz_loss = lovasz_softmax(y_pred, y_true)
+                lovasz_loss = lovasz_loss_fn(y_pred, y_true)
 
         # Backward pass
         if training:
