@@ -1,4 +1,4 @@
-description: unext, adamw, customeonecycle, mIoU metric
+description: unext, adamw, customeonecycle, jaccard
 
 resume:
   path: false
@@ -22,8 +22,9 @@ training:
   batch_size_test: 32
   n_workers: 8
   n_epochs: 100
-  train_criterion: crossentropy
-  test_criterion: crossentropy
+  train_criterion: jaccard
+  test_criterion: jaccard
+  tracked_metric: jaccard
   optimizer:
     type: adamw
     lr: 5.0e-4

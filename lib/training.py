@@ -37,11 +37,12 @@ class Am:
         self.running_average = sum(self.running) / len(self.running)
 
 
-def cycle(train_or_test, model, dataloader, epoch, criterion, optimizer, cfg, scheduler):
-    meter_loss, meter_iou_loss, meter_iou_score = Am(), Am(), Am()
+def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
+    meter_ce_loss, meter_iou_loss, meter_iou_score = Am(), Am(), Am()
 
     log_freq = cfg['output']['log_freq']
     device = cfg['training']['device']
+    criterion = cfg['training'][f'{train_or_test}_criterion']
     model = model.to(device)
 
     if train_or_test == 'train':
@@ -64,11 +65,20 @@ def cycle(train_or_test, model, dataloader, epoch, criterion, optimizer, cfg, sc
         with nullcontext() if training else torch.no_grad():
             y_pred = model(x)
             y_pred = upsample_pred_if_needed(y_pred, y_true)
-            loss = criterion(y_pred, y_true)
+            with nullcontext() if criterion == "crossentropy" else torch.no_grad():
+                crossentropy_loss = F.cross_entropy(y_pred, y_true)
+            with nullcontext() if criterion == "jaccard" else torch.no_grad():
+                iou_loss = jaccard_loss(y_true, y_pred)
 
         # Backward pass
         if training:
-            loss.backward()
+            if criterion == "crossentropy":
+                crossentropy_loss.backward()
+            elif criterion == "jaccard":
+                iou_loss.backward()
+            else:
+                raise ValueError(f"Unknown loss type {criterion}")
+
             optimizer.step()
             if scheduler:
                 scheduler.step()
@@ -76,39 +86,36 @@ def cycle(train_or_test, model, dataloader, epoch, criterion, optimizer, cfg, sc
         # Metrics
         with torch.no_grad():
             iou_score = mIOU(y_true, y_pred, num_classes=len(LABELS))
-            iou_loss = jaccard_loss(y_true, y_pred).cpu().numpy()
 
-        meter_loss.update(loss, x.size(0))
+        meter_ce_loss.update(crossentropy_loss.detach().cpu().numpy(), x.size(0))
+        meter_iou_loss.update(iou_loss.detach().cpu().numpy(), x.size(0))
         meter_iou_score.update(iou_score, x.size(0))
-        meter_iou_loss.update(iou_loss, x.size(0))
 
         # Loss intra-epoch printing
         if (i_batch + 1) % log_freq == 0:
 
             print(f"{train_or_test.upper(): >5} [{i_batch + 1:03d}/{len(dataloader):03d}]\t\t"
                   f"IoU: {meter_iou_score.running_average:.5f}\t\t"
-                  f"Loss: {meter_loss.running_average:.5f}\t\t"
+                  f"CE loss: {meter_ce_loss.running_average:.5f}\t\t"
                   f"IoU loss: {meter_iou_loss.running_average:.5f}\t\t")
 
             if training:
                 wandb.log({"batch": len(dataloader) * epoch + i_batch,
                            f"iou_{train_or_test}": meter_iou_score.running_average,
-                           f"loss_{train_or_test}": meter_loss.running_average,
+                           f"celoss_{train_or_test}": meter_ce_loss.running_average,
                            f"iouloss_{train_or_test}": meter_iou_loss.running_average})
 
     print(f"{train_or_test.upper(): >5} Complete!\t\t"
           f"IoU: {meter_iou_score.avg:.5f}\t\t"
-          f"Loss: {meter_loss.avg:.5f}\t\t"
+          f"CE loss: {meter_ce_loss.avg:.5f}\t\t"
           f"IoU loss: {meter_iou_loss.avg:.5f}")
-
-    loss = float(meter_loss.avg.detach().cpu().numpy())
 
     wandb.log({"epoch": epoch,
                f"iou_{train_or_test}": meter_iou_score.avg,
-               f"loss_{train_or_test}": meter_loss.avg,
+               f"celoss_{train_or_test}": meter_ce_loss.avg,
                f"iouloss_{train_or_test}": meter_iou_loss.avg})
 
-    return loss
+    return meter_ce_loss.avg, meter_iou_loss.avg, meter_iou_score.avg
 
 
 def save_state(state, save_name, test_metric, best_metric, cfg, last_save_path, lowest_best=True, force=False):

@@ -1,40 +1,5 @@
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
-
-
-def get_criterion(name, class_weights, ignore_index=-100):
-    if name == 'crossentropy':
-        return nn.CrossEntropyLoss(weight=class_weights, ignore_index=ignore_index)
-    else:
-        raise ValueError()
-
-
-def load_criterion(cfg):
-    crit_name_train = cfg['training']['train_criterion']
-    crit_name_test = cfg['training']['test_criterion']
-
-    class_weights_train = cfg['training'].get('class_weights_train', None)
-    class_weights_test = cfg['training'].get('class_weights_test', None)
-
-    ignore_index = cfg['training'].get('ignore_index', -100)
-
-    if class_weights_train:
-        print(f"Using class weights {class_weights_train} for training")
-        class_weights_train = torch.tensor(class_weights_train).float().to(cfg['training']['device'])
-    else:
-        class_weights_train = None
-
-    if class_weights_test:
-        print(f"Using class weights {class_weights_test} for testing")
-        class_weights_test = torch.tensor(class_weights_test).float().to(cfg['training']['device'])
-    else:
-        class_weights_test = None
-
-    train_criterion = get_criterion(crit_name_train, class_weights_train, ignore_index)
-    test_criterion = get_criterion(crit_name_test, class_weights_test, ignore_index)
-
-    return train_criterion, test_criterion
 
 
 def dice_loss(true, logits, eps=1e-7):
