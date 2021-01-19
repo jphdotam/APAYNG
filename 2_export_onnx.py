@@ -1,9 +1,8 @@
-import torch
+import torch.onnx
 from lib.models import *
 from lib.data import LABELS
-from lib.inference import inference_on_stack
 
-WEIGHTS_PATH = ""
+WEIGHTS_PATH = r"G:\APAYN\models\005\80_0.80656.pt"
 DEVICE = "cuda"
 INPUT_DIM = (1, 1, 576, 576)
 
