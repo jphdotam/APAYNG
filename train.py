@@ -13,7 +13,7 @@ from lib.training import cycle, save_state
 
 if __name__ == "__main__":
 
-    CONFIG = "./experiments/004.yaml"
+    CONFIG = "./experiments/006.yaml"
     cfg = load_config(CONFIG)
 
     bs_train, bs_test, n_workers = cfg['training']['batch_size_train'], cfg['training']['batch_size_test'], cfg['training']['n_workers']
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     optimizer, scheduler = load_optimizer(model, cfg, state, steps_per_epoch=len(dl_train))
 
     # Training
-    best_loss, best_path, last_save_path = 1e10, None, None
+    best_metric, best_path, last_save_path = 0 if tracked_metric == 'iou' else 1e10, None, None
 
     # Weights and biases
     wandb.init(project="APAYN", config=cfg, notes=cfg.get("description", None))
@@ -69,12 +69,12 @@ if __name__ == "__main__":
                  'optimizer': optimizer.state_dict(),
                  'scheduler': scheduler}
         save_name = f"{epoch}_{test_metric:.05f}.pt"
-        best_loss, last_save_path = save_state(state, save_name, test_metric, best_loss, cfg, last_save_path, lowest_best=lowest_best)
+        best_metric, last_save_path = save_state(state, save_name, test_metric, best_metric, cfg, last_save_path, lowest_best=lowest_best)
 
         # vis
         vis(model, ds_test, cfg, epoch)
 
     # Save the final epoch
     save_name = f"FINAL_{epoch}_{test_metric:.05f}.pt"
-    best_loss, last_save_path = save_state(state, save_name, test_metric, best_loss, cfg, last_save_path, force=True)
+    best_metric, last_save_path = save_state(state, save_name, test_metric, best_metric, cfg, last_save_path, force=True)
 

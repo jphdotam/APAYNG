@@ -62,7 +62,7 @@ class DiceLoss(nn.Module):
         p = p.reshape(N * C, -1)
 
         # 1-HOT
-        t = torch.eye(self.num_classes)[t.squeeze(1)]
+        t = torch.eye(self.num_classes)[t.squeeze(1)].to(t.device)
         t = t.permute(0, 3, 1, 2).float()
 
         t = t.reshape(N * C, -1)
@@ -82,7 +82,7 @@ class DiceLoss(nn.Module):
 
 
 class DiceCEHybridLoss(nn.Module):
-    def __init__(self, num_classes, bce_weight: float, dice: str = 'v1', **kwargs):
+    def __init__(self, num_classes, bce_weight: float):
         super().__init__()
         self.num_classes = num_classes
         self.bce_weight = bce_weight
