@@ -8,9 +8,10 @@ import torch
 import torch.nn.functional as F
 
 from lib.data import LABELS
-from lib.losses import dice_loss, jaccard_loss
+from lib.losses import jaccard_loss, DiceCEHybridLoss, lovasz_softmax
 from lib.hrnet import upsample_pred_if_needed
 from lib.metrics import mIOU
+
 
 class Am:
     """Simple average meter which stores progress as a running average"""
@@ -38,7 +39,9 @@ class Am:
 
 
 def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
-    meter_ce_loss, meter_iou_loss, meter_iou_score = Am(), Am(), Am()
+    meter_ce_loss, meter_jaccard_loss, meter_iou_score, meter_hybrid_dice_ce, meter_lovasz = Am(), Am(), Am(), Am(), Am()
+
+    dice_ce_hybrid_loss_fn = DiceCEHybridLoss(num_classes=len(LABELS), bce_weight=0.5)
 
     log_freq = cfg['output']['log_freq']
     device = cfg['training']['device']
@@ -69,6 +72,10 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
                 crossentropy_loss = F.cross_entropy(y_pred, y_true)
             with nullcontext() if criterion == "jaccard" else torch.no_grad():
                 iou_loss = jaccard_loss(y_true, y_pred)
+            with nullcontext() if criterion == "dice_ce_hybrid" else torch.no_grad():
+                dice_ce_hybrid_loss = dice_ce_hybrid_loss_fn(y_pred, y_true)
+            with nullcontext() if criterion == "lovasz" else torch.no_grad():
+                lovasz_loss = lovasz_softmax(y_pred, y_true)
 
         # Backward pass
         if training:
@@ -76,6 +83,10 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
                 crossentropy_loss.backward()
             elif criterion == "jaccard":
                 iou_loss.backward()
+            elif criterion == "dice_ce_hybrid":
+                dice_ce_hybrid_loss.backward()
+            elif criterion == "lovasz":
+                lovasz_loss.backward()
             else:
                 raise ValueError(f"Unknown loss type {criterion}")
 
@@ -88,8 +99,10 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
             iou_score = mIOU(y_true, y_pred, num_classes=len(LABELS))
 
         meter_ce_loss.update(crossentropy_loss.detach().cpu().numpy(), x.size(0))
-        meter_iou_loss.update(iou_loss.detach().cpu().numpy(), x.size(0))
+        meter_jaccard_loss.update(iou_loss.detach().cpu().numpy(), x.size(0))
         meter_iou_score.update(iou_score, x.size(0))
+        meter_hybrid_dice_ce.update(dice_ce_hybrid_loss.detach().cpu().numpy(), x.size(0))
+        meter_lovasz.update(lovasz_loss.detach().cpu().numpy(), x.size(0))
 
         # Loss intra-epoch printing
         if (i_batch + 1) % log_freq == 0:
@@ -97,25 +110,33 @@ def cycle(train_or_test, model, dataloader, epoch, optimizer, cfg, scheduler):
             print(f"{train_or_test.upper(): >5} [{i_batch + 1:03d}/{len(dataloader):03d}]\t\t"
                   f"IoU: {meter_iou_score.running_average:.5f}\t\t"
                   f"CE loss: {meter_ce_loss.running_average:.5f}\t\t"
-                  f"IoU loss: {meter_iou_loss.running_average:.5f}\t\t")
+                  f"Jaccard loss: {meter_jaccard_loss.running_average:.5f}\t\t"
+                  f"HybridDICE loss: {meter_hybrid_dice_ce.running_average:.5f}\t\t"
+                  f"Lovasz loss: {meter_lovasz.running_average:.5f}")
 
             if training:
                 wandb.log({"batch": len(dataloader) * epoch + i_batch,
                            f"iou_{train_or_test}": meter_iou_score.running_average,
                            f"celoss_{train_or_test}": meter_ce_loss.running_average,
-                           f"iouloss_{train_or_test}": meter_iou_loss.running_average})
+                           f"jaccardloss_{train_or_test}": meter_jaccard_loss.running_average,
+                           f"hybriddiceloss_{train_or_test}": meter_hybrid_dice_ce.running_average,
+                           f"lovaszloss_{train_or_test}": meter_lovasz.running_average})
 
     print(f"{train_or_test.upper(): >5} Complete!\t\t"
           f"IoU: {meter_iou_score.avg:.5f}\t\t"
           f"CE loss: {meter_ce_loss.avg:.5f}\t\t"
-          f"IoU loss: {meter_iou_loss.avg:.5f}")
+          f"Jaccard loss: {meter_jaccard_loss.avg:.5f}\t\t"
+          f"HybridDICE loss: {meter_hybrid_dice_ce.avg:.5f}\t\t"
+          f"Lovasz loss: {meter_lovasz.avg:.5f}")
 
     wandb.log({"epoch": epoch,
                f"iou_{train_or_test}": meter_iou_score.avg,
                f"celoss_{train_or_test}": meter_ce_loss.avg,
-               f"iouloss_{train_or_test}": meter_iou_loss.avg})
+               f"jaccardloss_{train_or_test}": meter_jaccard_loss.avg,
+               f"hybriddiceloss_{train_or_test}": meter_hybrid_dice_ce.avg,
+               f"lovaszloss_{train_or_test}": meter_lovasz.avg})
 
-    return meter_ce_loss.avg, meter_iou_loss.avg, meter_iou_score.avg
+    return meter_ce_loss.avg, meter_jaccard_loss.avg, meter_iou_score.avg, meter_hybrid_dice_ce.avg, meter_lovasz.avg
 
 
 def save_state(state, save_name, test_metric, best_metric, cfg, last_save_path, lowest_best=True, force=False):
@@ -139,7 +160,3 @@ def save_state(state, save_name, test_metric, best_metric, cfg, last_save_path, 
     else:
         print(f"{test_metric:.5g} not improved from {best_metric:.5f}")
     return best_metric, last_save_path
-
-
-
-

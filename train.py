@@ -45,17 +45,23 @@ if __name__ == "__main__":
         print(f"\nEpoch {epoch} of {n_epochs}")
 
         # Cycle
-        train_ce_loss, train_iou_loss, train_iou_score = cycle('train', model, dl_train, epoch, optimizer, cfg, scheduler)
-        test_ce_loss, test_iou_loss, test_iou_score = cycle('test', model, dl_test, epoch, optimizer, cfg, scheduler)
+        train_ce_loss, train_jaccard_loss, train_iou, train_hybriddice_loss, train_lovasz_loss = cycle('train', model, dl_train, epoch, optimizer, cfg, scheduler)
+        test_ce_loss, test_jaccard_loss, test_iou, test_hybriddice_loss, test_lovasz_loss = cycle('test', model, dl_test, epoch, optimizer, cfg, scheduler)
 
         # Save state if required
         if tracked_metric == 'crossentropy':
             test_metric = test_ce_loss
         elif tracked_metric == 'jaccard':
-            test_metric = test_iou_loss
+            test_metric = test_jaccard_loss
+        elif tracked_metric == 'dice_ce_hybrid':
+            test_metric = test_hybriddice_loss
+        elif tracked_metric == 'lovasz':
+            test_metric = test_lovasz_loss
         elif tracked_metric == 'iou':
-            test_metric = test_iou_score
+            test_metric = test_iou
             lowest_best = False
+        else:
+            raise ValueError(f"Unknown tracked metric {tracked_metric}")
 
         model_weights = model.module.state_dict() if cfg['training']['data_parallel'] else model.state_dict()
         state = {'epoch': epoch + 1,
