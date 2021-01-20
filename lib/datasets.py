@@ -30,7 +30,7 @@ class APAYNSliceDataset(Dataset):
         json_path = self.samples[idx]
         dicom_path = json_path.split('.dcm')[0] + '.dcm'
 
-        img, rescale_ratio = load_dicom(dicom_path)
+        img, rescale_ratio, _slice_thickness = load_dicom(dicom_path)
         mask = load_mask_from_json(json_path, rescale_ratio)
 
         trans = self.transforms(image=img, mask=mask)
