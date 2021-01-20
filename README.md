@@ -3,6 +3,8 @@
 
 This is a re-implementation of our study ["Automated analysis and detection of abnormalities in transaxial anatomical cardiovascular magnetic resonance images: a proof of concept study with potential to optimize image acquisition"](https://link.springer.com/article/10.1007/s10554-020-02050-w) in the The International Journal of Cardiovascular Imaging.
 
+![Method summary](https://media.springernature.com/full/springer-static/image/art%3A10.1007%2Fs10554-020-02050-w/MediaObjects/10554_2020_2050_Fig2_HTML.png?as=webp)
+
 Within the first couple of minutes of a CMR scan, a series of transaxial images are routinely acquired, commonly termed the “anatomy” sequences.
 
 Here we use a neural network to analyse and segment each slice of these images, before combining these slices into a 3D model. This 3D model is then used to estimate common cardiac measurements made by expert humans. The hope is we can get good estimates of these measures right at the start of the scan, so any unexpected findings can be flagged up early.
