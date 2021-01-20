@@ -133,3 +133,5 @@ output/predictions*
 output/predictions
 _run/_old
 wandb/
+*.csv
+

@@ -11,3 +11,4 @@ albumentations
 wandb
 fastai
 onnxruntime
+jupyterlab
