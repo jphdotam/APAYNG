@@ -6,8 +6,8 @@ from sklearn.metrics import r2_score
 from lib.inference import remove_nan
 
 GROUND_TRUTH_CSV = r"D:\Local\APAYN\dicoms\sz.csv"
-PHILIPS_CSV = "predictions_Philips Medical Systems.csv"
-SIEMENS_CSV = "predictions_SIEMENS.csv"
+PHILIPS_CSV = "./data/predictions_Philips Medical Systems.csv"
+SIEMENS_CSV = "./data/predictions_SIEMENS.csv"
 
 COLUMN_MAPS = {
     "LVEDV": "lv_cav",

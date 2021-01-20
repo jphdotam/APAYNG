@@ -80,7 +80,7 @@ for manufacturer in [d for d in os.listdir(DICOM_FOLDER) if os.path.isdir(os.pat
             study_dict[type] = vol
         volumes_by_study_manu.append(volumes_ml)
 
-    with open(f'predictions_{manufacturer}.csv', 'w', encoding='utf8') as output_file:
+    with open(f'./data/predictions_{manufacturer}.csv', 'w', encoding='utf8') as output_file:
         fc = csv.DictWriter(output_file, fieldnames=volumes_by_study_manu[0].keys())
         fc.writeheader()
         fc.writerows(volumes_by_study_manu)
