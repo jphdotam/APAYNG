@@ -1,5 +1,3 @@
-from efficientunet import get_efficientunet_b0, Conv2dSamePadding
-
 import torch
 import torch.nn as nn
 
@@ -39,6 +37,3 @@ def load_model(cfg):
 
     return model, starting_epoch, state
 
-
-if __name__ == "__main__":
-    model = get_efficientunet_b0(out_channels=10)

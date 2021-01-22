@@ -37,6 +37,9 @@ for manufacturer in [d for d in os.listdir(DICOM_FOLDER) if os.path.isdir(os.pat
 
     volumes_by_study_manu = []
 
+    if manufacturer == 'Philips Medical Systems':
+        continue
+
     for i_study, study_id in enumerate(tqdm(os.listdir(os.path.join(DICOM_FOLDER, manufacturer)))):
 
         if study_id not in list(df_reported['accession_number']):

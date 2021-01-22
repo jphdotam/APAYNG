@@ -25,3 +25,8 @@ torch.onnx.export(model,
                                 'output': {0: 'batch_size',
                                            2: 'height',
                                            3: 'width'}})
+
+traced_model = torch.jit.trace(model, dummy_input)
+y = traced_model(dummy_input)
+print(traced_model.graph)
+traced_model.save(f"{WEIGHTS_PATH}.ts")
