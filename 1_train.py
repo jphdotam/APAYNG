@@ -13,7 +13,7 @@ from lib.training import cycle, save_state
 
 if __name__ == "__main__":
 
-    CONFIG = "./experiments/005.yaml"
+    CONFIG = "./experiments/008.yaml"
     cfg = load_config(CONFIG)
 
     bs_train, bs_test, n_workers = cfg['training']['batch_size_train'], cfg['training']['batch_size_test'], cfg['training']['n_workers']
