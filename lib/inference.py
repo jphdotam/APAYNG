@@ -26,7 +26,7 @@ def upsample_pred_if_needed(y_pred: torch.Tensor,
 
 def load_anatomy_stack_from_dicom_paths(list_of_dicom_paths: list,
                                         inference_transform: A.Compose,
-                                        rescale_to_pixel_size_mm: float = 0.64,
+                                        rescale_to_pixel_size_mm: float,
                                         channels_first: bool = True):
     stack_of_images = []
     pixel_ratios = []
@@ -46,7 +46,7 @@ def load_anatomy_stack_from_dicom_paths(list_of_dicom_paths: list,
 
 def rescale_segmented_anatomy_stack_to_isotropy(segmented_anatomy_stack: torch.Tensor,
                                                 slice_thickness_mm: float,
-                                                pixel_diameter_mm: float = 0.64):
+                                                pixel_diameter_mm: float):
     n_slices, n_classes, y_in, x_in = segmented_anatomy_stack.shape
 
     with torch.no_grad():
@@ -84,7 +84,7 @@ def volumes_from_volume_and_slice_width(volume: np.ndarray,
 
 
 def get_aortic_diameter_from_volumes_pytorch(anatomy_3d: np.ndarray,
-                                             pixel_diameter_mm: float = 0.64):
+                                             pixel_diameter_mm: float):
     """Takes an isotropic volume (after argmax) and a pixel_diameter
     The scale factor is a tuple of (slope, intercept)"""
 

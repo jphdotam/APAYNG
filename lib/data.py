@@ -21,7 +21,7 @@ LABELS = {label: i for i, label in enumerate([
     'lv_cav'])}
 
 
-def load_dicom(dicom_path, use_window_levels=False, normalize_by_sd=0.95, rescale_to_pixel_size_mm=0.64):
+def load_dicom(dicom_path, rescale_to_pixel_size_mm, use_window_levels=False, normalize_by_sd=0.95):
     assert bool(use_window_levels) != bool(normalize_by_sd), f"Either window level normalisation or sd normalisation"
 
     dcm = pydicom.dcmread(dicom_path)
@@ -102,7 +102,7 @@ def merge_aorta_segments_in_shape_data(shape_data):
 if __name__ == "__main__":
     dcm_path = "/Users/jameshoward/Data/APAYN/dicoms/SIEMENS/RYJ10650155/img0012--22.4602.dcm"
     json_path = "/Users/jameshoward/Data/APAYN/dicoms/SIEMENS/RYJ10650155/img0012--22.4602.dcm_T2_TRA_anatomy.json"
-    i, rescale_ratios, _slice_thickness = load_dicom(dcm_path)
+    i, rescale_ratios, _slice_thickness = load_dicom(dcm_path, rescale_to_pixel_size_mm=0.64)
     m = load_mask_from_json(json_path, rescale_ratios)
 
     import matplotlib.pyplot as plt
