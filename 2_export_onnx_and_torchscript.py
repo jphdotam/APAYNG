@@ -29,4 +29,12 @@ torch.onnx.export(model,
 traced_model = torch.jit.trace(model, dummy_input)
 y = traced_model(dummy_input)
 print(traced_model.graph)
-traced_model.save(f"{WEIGHTS_PATH}.ts")
+traced_model.save(f"{WEIGHTS_PATH}_{DEVICE}.ts")
+
+DEVICE = "cpu"
+model = model.to(DEVICE)
+dummy_input = dummy_input.to(DEVICE)
+traced_model = torch.jit.trace(model, dummy_input)
+y = traced_model(dummy_input)
+print(traced_model.graph)
+traced_model.save(f"{WEIGHTS_PATH}_{DEVICE}.ts")
