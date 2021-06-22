@@ -9,7 +9,7 @@ Within the first couple of minutes of a CMR scan, a series of transaxial images 
 
 Here we use a neural network to analyse and segment each slice of these images, before combining these slices into a 3D model. This 3D model is then used to estimate common cardiac measurements made by expert humans. The hope is we can get good estimates of these measures right at the start of the scan, so any unexpected findings can be flagged up early.
 
-The Onnx trained model used for inference is available [here](https://james.dev/apayng_80_0.80656.pt.onnx)
+The Onnx trained model used for inference is available [here for CPU](https://james.dev/apayng_models/78_0.79991.pt_cpu.onnx) and [here for CUDA](78_0.79991.pt_cuda.onnx)
 
 `inference.pynb` shows an example where a folder containing a typical anatomy sequence is supplied to the model:
 ![Inference example](https://james.dev/apayn_example.png)
